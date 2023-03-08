@@ -1,8 +1,9 @@
 use env_logger;
-use log::{error, info, debug};
+use log::{debug, error, info};
 use std::{
+    fs,
     io::{BufRead, BufReader, Write},
-    net::{TcpListener, TcpStream}, fs,
+    net::{TcpListener, TcpStream},
 };
 
 pub fn lib() {
@@ -24,8 +25,13 @@ fn handle_connect(mut stream: TcpStream) {
         .collect();
     debug!("received: {:#?}", request);
 
-    let status = "HTTP/1.1 200 OK\r\n\r\n";
+    let status = "HTTP/1.1 200 OK";
     let content = fs::read_to_string("hello.html").unwrap();
-    let reply = format!("{}\r\nContent-Length: {}\r\n\r\n{}", status, content.len(), content);
+    let reply = format!(
+        "{}\r\nContent-Length: {}\r\n\r\n{}",
+        status,
+        content.len(),
+        content
+    );
     stream.write_all(reply.as_bytes()).unwrap();
 }
