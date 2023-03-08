@@ -18,15 +18,14 @@ pub fn lib() {
 }
 
 fn handle_connect(mut stream: TcpStream) {
-    let request: Vec<_> = BufReader::new(&mut stream)
-        .lines()
-        .map(|l| l.unwrap())
-        .take_while(|l| !l.is_empty())
-        .collect();
+    let request = BufReader::new(&mut stream).lines().next().unwrap().unwrap();
     debug!("received: {:#?}", request);
 
-    let status = "HTTP/1.1 200 OK";
-    let content = fs::read_to_string("hello.html").unwrap();
+    let (status, file) = match &request[..] {
+        "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "hello.html"),
+        _ => ("HTTP/1.1 404 NOT FOUND", "404.html"),
+    };
+    let content = fs::read_to_string(file).unwrap();
     let reply = format!(
         "{}\r\nContent-Length: {}\r\n\r\n{}",
         status,
