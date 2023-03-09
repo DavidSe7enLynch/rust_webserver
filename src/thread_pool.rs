@@ -1,17 +1,34 @@
+use std::thread;
+
 pub struct ThreadPool {
-    size: u32,
-    threads: Vec<>
+    size: usize,
+    workers: Vec<Worker>,
+}
+
+struct Worker {
+    id: usize,
+    thread: thread::JoinHandle<()>,
+}
+
+impl Worker {
+    fn new(id: usize) -> Worker {
+        Worker {
+            id,
+            thread: thread::spawn(|| {}),
+        }
+    }
 }
 
 impl ThreadPool {
-    pub fn new(size: u32) -> ThreadPool {
+    pub fn new(size: usize) -> ThreadPool {
         assert!(size > 0, "ThreadPool must have positive size");
-        let threads = Vec::with_capacity(size);
-        for _ in 0..size {
-
+        let mut workers = Vec::with_capacity(size);
+        for id in 0..size {
+            workers.push(Worker::new(id));
         }
-        ThreadPool { size, threads }
+        ThreadPool { size, workers }
     }
+
     pub fn execute<F>(&self, f: F)
     where
         F: FnOnce() + Send + 'static,
