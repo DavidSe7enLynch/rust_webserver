@@ -46,7 +46,7 @@ fn handle_connect(mut stream: TcpStream) -> Result<(), String> {
     debug!("received: {:#?}", request);
 
     let (status, file) = match &request[..] {
-        "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "hell.html"),
+        "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "hello.html"),
         _ => ("HTTP/1.1 404 NOT FOUND", "404.html"),
     };
     let content = fs::read_to_string(file).map_err(|e| format!("read file err: {e}"))?;
