@@ -34,7 +34,7 @@ fn handle_connect(mut stream: TcpStream) -> Result<(), String> {
         .lines()
         .next()
         .ok_or("no request line")?
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| format!("parse line to string err: {e}"))?;
     debug!("received: {:#?}", request);
 
     let (status, file) = match &request[..] {
@@ -50,6 +50,6 @@ fn handle_connect(mut stream: TcpStream) -> Result<(), String> {
     );
     stream
         .write_all(reply.as_bytes())
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| format!("write to tcp stream err: {e}"))?;
     Ok(())
 }
