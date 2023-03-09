@@ -1,8 +1,9 @@
-use log::{debug, info};
+use log::{debug, error, info};
 use std::{
     fs,
     io::{BufRead, BufReader, Write},
     net::{TcpListener, TcpStream},
+    process,
 };
 use thread_pool::ThreadPool;
 
@@ -10,9 +11,15 @@ mod thread_pool;
 
 pub fn lib() {
     env_logger::Builder::new().parse_filters("debug").init();
-    let listener = TcpListener::bind("127.0.0.1:7878").expect("start listening fail");
+    let listener = TcpListener::bind("127.0.0.1:7878").unwrap_or_else(|e| {
+        error!("start listening fail: {e}");
+        process::exit(1);
+    });
     info!("start listening...");
-    let pool = ThreadPool::new(4);
+    let pool = ThreadPool::build(4).unwrap_or_else(|e| {
+        error!("create threadpool fail: {e}");
+        process::exit(1);
+    });
 
     for stream in listener.incoming().take(2) {
         let stream = stream.expect("acquire tcp stream fail");

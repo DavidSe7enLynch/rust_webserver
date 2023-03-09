@@ -1,7 +1,7 @@
+use log::debug;
+use std::error::Error;
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
-
-use log::{debug};
 
 type Job = Box<dyn FnOnce() + Send + 'static>;
 
@@ -11,8 +11,10 @@ pub struct ThreadPool {
 }
 
 impl ThreadPool {
-    pub fn new(size: usize) -> ThreadPool {
-        assert!(size > 0, "ThreadPool must have positive size");
+    pub fn build(size: usize) -> Result<ThreadPool, String> {
+        if size <= 0 {
+            return Err("ThreadPool must have positive size".to_string());
+        }
 
         let (tx, rx) = match mpsc::channel() {
             (tx, rx) => (tx, Arc::new(Mutex::new(rx))),
@@ -22,10 +24,10 @@ impl ThreadPool {
         for id in 0..size {
             workers.push(Worker::new(id, Arc::clone(&rx)));
         }
-        ThreadPool {
+        Ok(ThreadPool {
             tx: Some(tx),
             workers,
-        }
+        })
     }
 
     pub fn execute<F>(&self, f: F)
