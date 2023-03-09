@@ -23,11 +23,13 @@ pub fn lib() {
 
     for stream in listener.incoming().take(2) {
         let stream = stream.expect("acquire tcp stream fail");
-        pool.execute(|| handle_connect(stream));
+        pool.execute(|| handle_connect(stream)).unwrap_or_else(|e| {
+            error!("execute job fail: {e}");
+        });
     }
 }
 
-fn handle_connect(mut stream: TcpStream) {
+fn handle_connect(mut stream: TcpStream) -> Result<(), String> {
     let request = BufReader::new(&mut stream)
         .lines()
         .next()
@@ -48,5 +50,6 @@ fn handle_connect(mut stream: TcpStream) {
     );
     stream
         .write_all(reply.as_bytes())
-        .expect("write to tcp stream fail");
+        .map_err(|e| e.to_string())?;
+    Ok(())
 }

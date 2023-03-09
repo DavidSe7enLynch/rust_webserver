@@ -1,9 +1,8 @@
-use log::debug;
-use std::error::Error;
+use log::{debug, error};
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 
-type Job = Box<dyn FnOnce() + Send + 'static>;
+type Job = Box<dyn FnOnce() -> Result<(), String> + Send + 'static>;
 
 pub struct ThreadPool {
     tx: Option<mpsc::Sender<Job>>,
@@ -30,22 +29,22 @@ impl ThreadPool {
         })
     }
 
-    pub fn execute<F>(&self, f: F)
+    pub fn execute<F>(&self, f: F) -> Result<(), String>
     where
-        F: FnOnce() + Send + 'static,
+        F: FnOnce() -> Result<(), String> + Send + 'static,
     {
         self.tx
             .as_ref()
             .expect("tx doesn't exist")
             .send(Box::new(f))
-            .expect("send job fail");
+            .map_err(|e| format!("send job fail: {e}"))?;
+        Ok(())
     }
 }
 
 impl Drop for ThreadPool {
     fn drop(&mut self) {
         debug!("dropping threadpool");
-        // let a = &self.tx;
         drop(self.tx.take());
 
         for worker in &mut self.workers {
@@ -66,11 +65,11 @@ impl Worker {
         let thread = thread::spawn(move || loop {
             match rx.lock().expect("acquire lock fail").recv() {
                 Ok(job) => {
-                    debug!("worker {} get job, start working", id);
-                    job();
+                    debug!("worker {id} get job, start working");
+                    job().unwrap_or_else(|e| error!("worker {id} executes job fail: {e}"));
                 }
                 Err(_) => {
-                    debug!("channel disconnected, closing worker {}", id);
+                    debug!("channel disconnected, closing worker {id}");
                     break;
                 }
             }
