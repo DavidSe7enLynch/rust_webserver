@@ -43,7 +43,11 @@ impl Worker {
         Worker {
             id,
             thread: thread::spawn(move || loop {
-                let job = rx.lock().unwrap().recv().unwrap();
+                let job = rx
+                    .lock()
+                    .expect("acquire lock fail")
+                    .recv()
+                    .expect("receive job fail");
                 debug!("worker {} get job, start working", id);
                 job();
             }),
