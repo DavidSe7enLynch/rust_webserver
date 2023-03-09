@@ -62,7 +62,14 @@ struct Worker {
 
 impl Worker {
     fn new(id: usize, rx: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
-        let thread = thread::spawn(move || loop {
+        Worker {
+            _id: id,
+            thread: Some(thread::spawn(move || Worker::work(id, rx))),
+        }
+    }
+
+    fn work(id: usize, rx: Arc<Mutex<mpsc::Receiver<Job>>>) {
+        loop {
             match rx.lock().expect("acquire lock err").recv() {
                 Ok(job) => {
                     debug!("worker {id} get job, start working");
@@ -73,11 +80,6 @@ impl Worker {
                     break;
                 }
             }
-        });
-
-        Worker {
-            _id: id,
-            thread: Some(thread),
         }
     }
 }

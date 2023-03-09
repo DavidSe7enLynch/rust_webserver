@@ -15,6 +15,7 @@ pub fn lib() {
         error!("start listening err: {e}");
         process::exit(1);
     });
+
     info!("start listening...");
     let pool = ThreadPool::build(4).unwrap_or_else(|e| {
         error!("create threadpool err: {e}");
@@ -48,6 +49,7 @@ fn handle_connect(mut stream: TcpStream) -> Result<(), String> {
         content.len(),
         content
     );
+
     stream
         .write_all(reply.as_bytes())
         .map_err(|e| format!("write to tcp stream err: {e}"))?;
