@@ -1,4 +1,4 @@
-use log::{error};
+use log::error;
 
 fn main() {
     env_logger::Builder::new().parse_filters("info").init();
