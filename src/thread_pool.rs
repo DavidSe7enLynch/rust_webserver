@@ -37,7 +37,7 @@ impl ThreadPool {
             .as_ref()
             .expect("tx doesn't exist")
             .send(Box::new(f))
-            .map_err(|e| format!("send job fail: {e}"))?;
+            .map_err(|e| format!("send job err: {e}"))?;
         Ok(())
     }
 }
@@ -63,10 +63,10 @@ struct Worker {
 impl Worker {
     fn new(id: usize, rx: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
         let thread = thread::spawn(move || loop {
-            match rx.lock().expect("acquire lock fail").recv() {
+            match rx.lock().expect("acquire lock err").recv() {
                 Ok(job) => {
                     debug!("worker {id} get job, start working");
-                    job().unwrap_or_else(|e| error!("worker {id} executes job fail: {e}"));
+                    job().unwrap_or_else(|e| error!("worker {id} executes job err: {e}"));
                 }
                 Err(_) => {
                     debug!("channel disconnected, closing worker {id}");
