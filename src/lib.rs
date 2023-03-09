@@ -3,38 +3,35 @@ use std::{
     fs,
     io::{BufRead, BufReader, Write},
     net::{TcpListener, TcpStream},
-    process,
 };
 use thread_pool::ThreadPool;
 
 mod thread_pool;
 
-pub fn lib() {
-    env_logger::Builder::new().parse_filters("info").init();
-    let listener = TcpListener::bind("127.0.0.1:7878").unwrap_or_else(|e| {
-        error!("start listening err: {e}");
-        process::exit(1);
-    });
+pub fn lib() -> Result<(), String> {
+    let listener = TcpListener::bind("127.0.0.1:7878").map_err(|e| {
+        let err = format!("start listening err: {e}");
+        error!("{err}");
+        err
+    })?;
 
     info!("start listening...");
-    let pool = ThreadPool::build(4).unwrap_or_else(|e| {
-        error!("create threadpool err: {e}");
-        process::exit(1);
-    });
+    let pool = ThreadPool::build(4).map_err(|e| {
+        let err = format!("create threadpool err: {e}");
+        error!("{err}");
+        err
+    })?;
 
     for stream in listener.incoming() {
-        match stream {
-            Ok(stream) => {
-                pool.execute(|| handle_connect(stream)).unwrap_or_else(|e| {
-                    error!("threadpool executes job err: {e}");
-                });
-            }
-            Err(e) => {
-                error!("get tcp stream err: {e}");
-                continue;
-            }
+        let Ok(stream) = stream else {
+            error!("get tcp stream err: {}", stream.unwrap_err());
+            continue;
         };
+        pool.execute(|| handle_connect(stream)).unwrap_or_else(|e| {
+            error!("threadpool executes job err: {e}");
+        });
     }
+    Ok(())
 }
 
 fn handle_connect(mut stream: TcpStream) -> Result<(), String> {

@@ -1,3 +1,7 @@
+use log::{error};
 fn main() {
-    webserver::lib();
+    env_logger::Builder::new().parse_filters("info").init();
+    webserver::lib().unwrap_or_else(|e| {
+        error!("webserver err: {e}");
+    });
 }
