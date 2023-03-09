@@ -9,18 +9,11 @@ use thread_pool::ThreadPool;
 mod thread_pool;
 
 pub fn lib() -> Result<(), String> {
-    let listener = TcpListener::bind("127.0.0.1:7878").map_err(|e| {
-        let err = format!("start listening err: {e}");
-        error!("{err}");
-        err
-    })?;
+    let listener =
+        TcpListener::bind("127.0.0.1:7878").map_err(|e| format!("start listening err: {e}"))?;
 
     info!("start listening...");
-    let pool = ThreadPool::build(4).map_err(|e| {
-        let err = format!("create threadpool err: {e}");
-        error!("{err}");
-        err
-    })?;
+    let pool = ThreadPool::build(4).map_err(|e| format!("create threadpool err: {e}"))?;
 
     for stream in listener.incoming() {
         let Ok(stream) = stream else {
