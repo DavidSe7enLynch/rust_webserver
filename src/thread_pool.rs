@@ -1,7 +1,7 @@
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 
-use log::{debug, info};
+use log::{debug};
 
 type Job = Box<dyn FnOnce() + Send + 'static>;
 
@@ -55,7 +55,7 @@ impl Drop for ThreadPool {
 }
 
 struct Worker {
-    id: usize,
+    _id: usize,
     thread: Option<thread::JoinHandle<()>>,
 }
 
@@ -75,7 +75,7 @@ impl Worker {
         });
 
         Worker {
-            id,
+            _id: id,
             thread: Some(thread),
         }
     }

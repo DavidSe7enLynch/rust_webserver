@@ -1,5 +1,4 @@
-use env_logger;
-use log::{debug, error, info};
+use log::{debug, info};
 use std::{
     fs,
     io::{BufRead, BufReader, Write},
