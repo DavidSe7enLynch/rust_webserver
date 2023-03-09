@@ -15,7 +15,7 @@ pub fn lib() {
     info!("start listening...");
     let pool = ThreadPool::new(4);
 
-    for stream in listener.incoming() {
+    for stream in listener.incoming().take(2) {
         let stream = stream.expect("acquire tcp stream fail");
         pool.execute(|| handle_connect(stream));
     }
