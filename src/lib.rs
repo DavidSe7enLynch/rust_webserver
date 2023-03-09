@@ -23,10 +23,17 @@ pub fn lib() {
     });
 
     for stream in listener.incoming() {
-        let stream = stream.expect("acquire tcp stream err");
-        pool.execute(|| handle_connect(stream)).unwrap_or_else(|e| {
-            error!("threadpool executes job err: {e}");
-        });
+        match stream {
+            Ok(stream) => {
+                pool.execute(|| handle_connect(stream)).unwrap_or_else(|e| {
+                    error!("threadpool executes job err: {e}");
+                });
+            }
+            Err(e) => {
+                error!("get tcp stream err: {e}");
+                continue;
+            }
+        };
     }
 }
 
