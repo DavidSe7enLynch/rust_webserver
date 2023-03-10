@@ -37,7 +37,7 @@ impl ThreadPool {
             .as_ref()
             .expect("tx doesn't exist")
             .send(Box::new(f))
-            .map_err(|e| format!("send job err: {e}"))?;
+            .map_err(|e| format!("send job err: {:#?}", e))?;
         Ok(())
     }
 }
@@ -49,7 +49,7 @@ impl Drop for ThreadPool {
 
         for worker in &mut self.workers {
             if let Some(thread) = worker.thread.take() {
-                thread.join().expect("join error");
+                thread.join().expect("join err");
             }
         }
     }
